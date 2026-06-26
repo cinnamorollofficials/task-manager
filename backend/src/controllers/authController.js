@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import pool from '../config/db.js';
+import { generateToken } from '../utils/jwt.js';
 
 export const register = async (req, res) => {
   try {
@@ -62,9 +63,11 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Token will be added in the next commit
+    const token = generateToken({ id: user.id, email: user.email, name: user.name });
+
     return res.status(200).json({
-      message: 'Login successful (token pending)',
+      message: 'Login successful',
+      token,
       user: {
         id: user.id,
         name: user.name,
