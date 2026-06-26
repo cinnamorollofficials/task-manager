@@ -41,7 +41,7 @@ Aplikasi Task Management System sederhana yang dibangun menggunakan **Express.js
 ## Panduan Instalasi & Jalankan Lokal
 
 ### 1. Prasyarat
-- Node.js (versi 18 atau lebih baru)
+- Node.js (versi 22 (LTS) atau lebih baru)
 - MySQL Database
 
 ### 2. Setup Database
