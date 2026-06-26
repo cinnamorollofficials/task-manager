@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import TaskCard from '../components/TaskCard';
@@ -14,24 +14,34 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
+  // Infinite scroll page states
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   // Search and Filter States synced with URL params
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const statusFilter = searchParams.get('status') || '';
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
+  // Sentinel ref for scroll observation
+  const sentinelRef = useRef(null);
+
   // Synchronize local search state with URL parameters (for browser back/forward navigation)
   const urlSearch = searchParams.get('search') || '';
   useEffect(() => {
     setSearch(urlSearch);
+    setDebouncedSearch(urlSearch);
   }, [urlSearch]);
 
   // Sync local search input to URL with debounce
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
+      setDebouncedSearch(search);
       setSearchParams(prev => {
         const next = new URLSearchParams(prev);
         if (search) {
@@ -46,29 +56,80 @@ const Dashboard = () => {
     return () => clearTimeout(delayDebounce);
   }, [search, setSearchParams]);
 
-  const fetchTasks = useCallback(async () => {
+  // Reset page when search or statusFilter changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter]);
+
+  const fetchTasks = useCallback(async (isFresh = false) => {
     setLoading(true);
     setError('');
+    const targetPage = isFresh ? 1 : page;
     try {
       const response = await api.get('/tasks', {
         params: {
           status: statusFilter || undefined,
-          search: search || undefined
+          search: debouncedSearch || undefined,
+          page: targetPage,
+          limit: 6
         }
       });
-      setTasks(response.data);
+      const newTasks = response.data.tasks;
+      const pagination = response.data.pagination;
+
+      if (isFresh) {
+        setTasks(newTasks);
+      } else {
+        setTasks(prev => {
+          const existingIds = new Set(prev.map(t => t.id));
+          const filteredNew = newTasks.filter(t => !existingIds.has(t.id));
+          return [...prev, ...filteredNew];
+        });
+      }
+      setHasMore(pagination.currentPage < pagination.totalPages);
     } catch (err) {
       console.error('Error fetching tasks:', err);
       setError('Gagal memuat daftar tugas.');
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, search]);
+  }, [statusFilter, debouncedSearch, page]);
 
-  // Fetch tasks on URL search parameter changes
+  // Fetch tasks on page or search/filter changes
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    fetchTasks(page === 1);
+  }, [page, debouncedSearch, statusFilter, fetchTasks]);
+
+  // Intersection Observer for scroll detection
+  useEffect(() => {
+    if (loading || !hasMore) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setPage(prevPage => prevPage + 1);
+      }
+    }, { threshold: 0.1 });
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [loading, hasMore]);
+
+  // Helper to refresh data when adding/updating/deleting a task
+  const handleRefresh = useCallback(() => {
+    if (page === 1) {
+      fetchTasks(true);
+    } else {
+      setPage(1);
+    }
+  }, [page, fetchTasks]);
 
   // Helper to update status filter via URL
   const setStatusFilter = (newStatus) => {
@@ -106,7 +167,7 @@ const Dashboard = () => {
         await api.post('/tasks', taskData);
       }
       setIsModalOpen(false);
-      fetchTasks();
+      handleRefresh();
     } catch (err) {
       console.error('Error saving task:', err);
       alert(err.response?.data?.message || 'Gagal menyimpan tugas.');
@@ -118,7 +179,7 @@ const Dashboard = () => {
     if (window.confirm('Apakah Anda yakin ingin menghapus tugas ini?')) {
       try {
         await api.delete(`/tasks/${taskId}`);
-        fetchTasks();
+        handleRefresh();
       } catch (err) {
         console.error('Error deleting task:', err);
         alert(err.response?.data?.message || 'Gagal menghapus tugas.');
@@ -219,16 +280,25 @@ const Dashboard = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onEdit={handleOpenEditModal}
-                onDelete={handleDeleteTask}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onEdit={handleOpenEditModal}
+                  onDelete={handleDeleteTask}
+                />
+              ))}
+            </div>
+
+            {/* Sentinel element for infinite scroll */}
+            <div ref={sentinelRef} className="h-20 flex justify-center items-center mt-8">
+              {loading && hasMore && (
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-m3-primary border-t-transparent"></div>
+              )}
+            </div>
+          </>
         )}
       </main>
 

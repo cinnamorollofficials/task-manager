@@ -38,24 +38,42 @@ export const getTasks = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, search } = req.query;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 6;
+    const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM tasks WHERE user_id = ?';
+    let baseQuery = ' FROM tasks WHERE user_id = ?';
     const queryParams = [userId];
 
     if (status && ['pending', 'in-progress', 'done'].includes(status)) {
-      query += ' AND status = ?';
+      baseQuery += ' AND status = ?';
       queryParams.push(status);
     }
 
     if (search && search.trim() !== '') {
-      query += ' AND title LIKE ?';
+      baseQuery += ' AND title LIKE ?';
       queryParams.push(`%${search.trim()}%`);
     }
 
-    query += ' ORDER BY created_at DESC';
+    // 1. Get total count
+    const countQuery = `SELECT COUNT(*) as total` + baseQuery;
+    const [countResult] = await pool.query(countQuery, queryParams);
+    const totalTasks = countResult[0].total;
+    const totalPages = Math.max(1, Math.ceil(totalTasks / limit));
 
-    const [tasks] = await pool.query(query, queryParams);
-    return res.status(200).json(tasks);
+    // 2. Get paginated tasks
+    let selectQuery = `SELECT *` + baseQuery + ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    const [tasks] = await pool.query(selectQuery, [...queryParams, limit, offset]);
+
+    return res.status(200).json({
+      tasks,
+      pagination: {
+        totalTasks,
+        totalPages,
+        currentPage: page,
+        limit
+      }
+    });
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return res.status(500).json({ message: 'Internal server error' });
