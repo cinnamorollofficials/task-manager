@@ -2,6 +2,8 @@
 
 Aplikasi Task Management System sederhana yang dibangun menggunakan **Express.js, React.js (Vite), dan MySQL**. Aplikasi ini didesain menggunakan **Material Design 3 Expressive Theme** untuk memberikan antarmuka pengguna yang premium, modern, dan sangat responsif.
 
+![Dashboard Preview](screenshot.png)
+
 ---
 
 ## Fitur Utama (MVP & Nilai Plus)
