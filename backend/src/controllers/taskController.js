@@ -33,3 +33,26 @@ export const createTask = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const getTasks = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status } = req.query;
+
+    let query = 'SELECT * FROM tasks WHERE user_id = ?';
+    const queryParams = [userId];
+
+    if (status && ['pending', 'in-progress', 'done'].includes(status)) {
+      query += ' AND status = ?';
+      queryParams.push(status);
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const [tasks] = await pool.query(query, queryParams);
+    return res.status(200).json(tasks);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
