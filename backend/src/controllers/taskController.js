@@ -61,3 +61,60 @@ export const getTasks = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const updateTask = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { title, description, status, deadline } = req.body;
+
+    if (title !== undefined && title.trim() === '') {
+      return res.status(400).json({ message: 'Title cannot be empty' });
+    }
+
+    // Build update query dynamically based on provided fields
+    const updates = [];
+    const queryParams = [];
+
+    if (title !== undefined) {
+      updates.push('title = ?');
+      queryParams.push(title.trim());
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      queryParams.push(description || null);
+    }
+    if (status !== undefined) {
+      if (!['pending', 'in-progress', 'done'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+      }
+      updates.push('status = ?');
+      queryParams.push(status);
+    }
+    if (deadline !== undefined) {
+      updates.push('deadline = ?');
+      queryParams.push(deadline || null);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
+    // Append id and userId to query parameters
+    queryParams.push(id, userId);
+
+    const [result] = await pool.query(
+      `UPDATE tasks SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`,
+      queryParams
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Task not found or unauthorized' });
+    }
+
+    return res.status(200).json({ message: 'Task updated successfully' });
+  } catch (error) {
+    console.error('Error updating task:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
