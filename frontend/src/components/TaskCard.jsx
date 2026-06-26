@@ -2,11 +2,17 @@ import React from 'react';
 import { Calendar, Edit3, Trash2 } from 'lucide-react';
 
 const TaskCard = ({ task, onEdit, onDelete }) => {
+  // Helper to parse deadline string safely in local timezone (avoiding timezone offset shifts)
+  const getDeadlineDate = (dateStr) => {
+    const [year, month, day] = dateStr.substring(0, 10).split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Format Date to Indonsian Locale
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Tanpa deadline';
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateStr).toLocaleDateString('id-ID', options);
+    return getDeadlineDate(dateStr).toLocaleDateString('id-ID', options);
   };
 
   // Get status color styles (Material 3 container style)
@@ -35,7 +41,7 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
   };
 
   // Check if task is overdue (has deadline, is not done, and deadline date is in the past)
-  const isOverdue = task.deadline && task.status !== 'done' && new Date(task.deadline).setHours(23, 59, 59, 999) < Date.now();
+  const isOverdue = task.deadline && task.status !== 'done' && getDeadlineDate(task.deadline).setHours(23, 59, 59, 999) < Date.now();
 
   return (
     <div className="glassmorphism rounded-3xl p-6 border border-m3-outline/10 flex flex-col justify-between hover:scale-[1.02] hover:border-m3-primary/30 transition-all duration-300 shadow-md relative overflow-hidden group">
