@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Navbar from '../components/Navbar';
+import TaskCard from '../components/TaskCard';
+import TaskFormModal from '../components/TaskFormModal';
 import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
-import { Search, Plus, Filter, AlertCircle, RefreshCw, Calendar, Trash2, Edit } from 'lucide-react';
+import { Search, Plus, Filter, AlertCircle, RefreshCw, ClipboardList } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -15,8 +17,11 @@ const Dashboard = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState(''); // '' for all, 'pending', 'in-progress', 'done'
 
-  // Debounced search logic could go here, or we can just fetch on change / input key press.
-  // Since it's live search, we can use a useEffect with a small timeout.
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+
+  // Fetch tasks on search/filter changes
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       fetchTasks();
@@ -44,6 +49,49 @@ const Dashboard = () => {
     }
   };
 
+  // Add Task
+  const handleOpenAddModal = () => {
+    setEditingTask(null);
+    setIsModalOpen(true);
+  };
+
+  // Edit Task
+  const handleOpenEditModal = (task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  // Handle Submit Form (Create / Update)
+  const handleFormSubmit = async (taskData) => {
+    try {
+      if (editingTask) {
+        // Update
+        await api.put(`/tasks/${editingTask.id}`, taskData);
+      } else {
+        // Create
+        await api.post('/tasks', taskData);
+      }
+      setIsModalOpen(false);
+      fetchTasks();
+    } catch (err) {
+      console.error('Error saving task:', err);
+      alert(err.response?.data?.message || 'Gagal menyimpan tugas.');
+    }
+  };
+
+  // Delete Task
+  const handleDeleteTask = async (taskId) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus tugas ini?')) {
+      try {
+        await api.delete(`/tasks/${taskId}`);
+        fetchTasks();
+      } catch (err) {
+        console.error('Error deleting task:', err);
+        alert(err.response?.data?.message || 'Gagal menghapus tugas.');
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-m3-background text-m3-onBackground pb-12">
       <Navbar />
@@ -62,6 +110,7 @@ const Dashboard = () => {
 
           {/* Add Task Button */}
           <button
+            onClick={handleOpenAddModal}
             className="self-start bg-m3-primary text-m3-onPrimary hover:bg-m3-primaryContainer hover:text-m3-onPrimaryContainer font-bold px-6 py-3 rounded-full flex items-center gap-2 transition-all duration-300 m3-ripple shadow-lg"
           >
             <Plus size={20} />
@@ -128,19 +177,34 @@ const Dashboard = () => {
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-m3-primary border-t-transparent"></div>
           </div>
         ) : tasks.length === 0 ? (
-          <div className="text-center py-20 glassmorphism rounded-3xl border border-m3-outline/5 p-8 max-w-md mx-auto">
-            <AlertCircle className="mx-auto h-12 w-12 text-m3-outline mb-4" />
+          <div className="text-center py-20 glassmorphism rounded-3xl border border-m3-outline/5 p-8 max-w-sm mx-auto flex flex-col items-center">
+            <ClipboardList className="h-14 w-14 text-m3-outline/60 mb-4" />
             <h3 className="text-lg font-bold text-m3-onSurface mb-2">Tidak ada tugas</h3>
-            <p className="text-m3-onSurfaceVariant text-sm">
-              {search || statusFilter ? 'Tidak ada tugas yang cocok dengan pencarian Anda.' : 'Mulailah dengan membuat tugas baru.'}
+            <p className="text-m3-onSurfaceVariant text-sm text-center">
+              {search || statusFilter ? 'Tidak ada tugas yang cocok dengan kriteria filter Anda.' : 'Semua tugas kosong. Mulailah dengan menambahkan tugas pertama Anda.'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Task cards will be rendered here in the next commits */}
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={handleOpenEditModal}
+                onDelete={handleDeleteTask}
+              />
+            ))}
           </div>
         )}
       </main>
+
+      {/* Task Creation & Modification Modal */}
+      <TaskFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleFormSubmit}
+        initialData={editingTask}
+      />
     </div>
   );
 };
