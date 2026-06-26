@@ -37,7 +37,7 @@ export const createTask = async (req, res) => {
 export const getTasks = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { status } = req.query;
+    const { status, search } = req.query;
 
     let query = 'SELECT * FROM tasks WHERE user_id = ?';
     const queryParams = [userId];
@@ -45,6 +45,11 @@ export const getTasks = async (req, res) => {
     if (status && ['pending', 'in-progress', 'done'].includes(status)) {
       query += ' AND status = ?';
       queryParams.push(status);
+    }
+
+    if (search && search.trim() !== '') {
+      query += ' AND title LIKE ?';
+      queryParams.push(`%${search.trim()}%`);
     }
 
     query += ' ORDER BY created_at DESC';
