@@ -9,6 +9,13 @@ export const createTask = async (req, res) => {
       return res.status(400).json({ message: 'Title is required' });
     }
 
+    if (deadline) {
+      const parsedDate = Date.parse(deadline);
+      if (isNaN(parsedDate)) {
+        return res.status(400).json({ message: 'Invalid deadline date format' });
+      }
+    }
+
     const taskStatus = status || 'pending';
     const taskDeadline = deadline || null;
 
@@ -110,6 +117,12 @@ export const updateTask = async (req, res) => {
       queryParams.push(status);
     }
     if (deadline !== undefined) {
+      if (deadline !== null) {
+        const parsedDate = Date.parse(deadline);
+        if (isNaN(parsedDate)) {
+          return res.status(400).json({ message: 'Invalid deadline date format' });
+        }
+      }
       updates.push('deadline = ?');
       queryParams.push(deadline || null);
     }

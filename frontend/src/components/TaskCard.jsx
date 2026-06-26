@@ -34,6 +34,9 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
     }
   };
 
+  // Check if task is overdue (has deadline, is not done, and deadline date is in the past)
+  const isOverdue = task.deadline && task.status !== 'done' && new Date(task.deadline).setHours(23, 59, 59, 999) < Date.now();
+
   return (
     <div className="glassmorphism rounded-3xl p-6 border border-m3-outline/10 flex flex-col justify-between hover:scale-[1.02] hover:border-m3-primary/30 transition-all duration-300 shadow-md relative overflow-hidden group">
       {/* Top Section */}
@@ -45,9 +48,14 @@ const TaskCard = ({ task, onEdit, onDelete }) => {
           </span>
 
           {/* Deadline */}
-          <span className="text-xs text-m3-onSurfaceVariant flex items-center gap-1.5 font-medium">
-            <Calendar size={14} className="text-m3-primary" />
+          <span className={`text-xs flex items-center gap-1.5 font-medium ${isOverdue ? 'text-m3-error font-semibold' : 'text-m3-onSurfaceVariant'}`}>
+            <Calendar size={14} className={isOverdue ? 'text-m3-error' : 'text-m3-primary'} />
             {formatDate(task.deadline)}
+            {isOverdue && (
+              <span className="px-1.5 py-0.5 bg-m3-onError text-m3-error rounded text-[10px] font-extrabold uppercase tracking-wide animate-pulse">
+                Terlewat
+              </span>
+            )}
           </span>
         </div>
 

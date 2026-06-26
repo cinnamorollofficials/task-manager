@@ -22,4 +22,13 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Task Manager API is running' });
 });
 
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Global Error Handler:', err);
+  res.status(500).json({
+    message: err.message || 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
 export default app;

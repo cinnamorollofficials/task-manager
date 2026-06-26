@@ -17,5 +17,7 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `status` ENUM('pending', 'in-progress', 'done') NOT NULL DEFAULT 'pending',
   `deadline` DATE NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  INDEX `idx_user_created` (`user_id`, `created_at` DESC),
+  INDEX `idx_user_status` (`user_id`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

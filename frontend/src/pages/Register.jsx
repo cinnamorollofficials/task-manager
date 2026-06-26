@@ -29,6 +29,12 @@ const Register = () => {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Format email tidak valid.');
+      return;
+    }
+
     setLoading(true);
     const result = await registerUser(name, email, password);
     setLoading(false);

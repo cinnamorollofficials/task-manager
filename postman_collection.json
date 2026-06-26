@@ -1,0 +1,692 @@
+{
+	"info": {
+		"_postman_id": "31b26c2e-4b68-45a7-ab92-d6c63b4699de",
+		"name": "Task Management API",
+		"description": "API collection for Task Management System (Technical Test Kanggo). Includes test cases for HTTP 200, 201, 400, 401, 404, and 500.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication (Auth)",
+			"item": [
+				{
+					"name": "Register - Success (201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New User\",\n    \"email\": \"newuser@example.com\",\n    \"password\": \"secretpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registers a new user account. Returns HTTP 201 Created upon success."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Fail: Email Taken (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe Duplicate\",\n    \"email\": \"john@example.com\",\n    \"password\": \"secretpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Fails to register because the email address is already registered. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Fail: Missing Required Fields (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"\",\n    \"email\": \"\",\n    \"password\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Fails because required fields (name, email, password) are not sent. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Fail: Password Too Short (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Short Pass User\",\n    \"email\": \"shortpass@example.com\",\n    \"password\": \"123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Fails because password is shorter than 6 characters. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Fail: Invalid Email Format (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Bad Email User\",\n    \"email\": \"notanemail\",\n    \"password\": \"secretpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Fails because the email format is invalid. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Success (200)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"secretpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Logins a user. Returns HTTP 200 OK and a JWT token upon success."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Fail: Invalid Credentials (401)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fails because of incorrect email or password. Returns HTTP 401 Unauthorized."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Fail: Missing Fields (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"\",\n    \"password\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Fails because required fields (email, password) are empty. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Tasks Management",
+			"item": [
+				{
+					"name": "Get Tasks - Success (200)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks?status=pending&search=Refactor&page=1&limit=6",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "pending"
+								},
+								{
+									"key": "search",
+									"value": "Refactor"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "6"
+								}
+							]
+						},
+						"description": "Retrieves the authenticated user's tasks. Supports search, status filtering, and limit query parameter. Returns HTTP 200 OK."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tasks - Fail: Unauthorized (401)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "Fails because no JWT bearer token (or an invalid token) was sent in the header. Returns HTTP 401 Unauthorized."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Success (201)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Implement Redux State\",\n    \"description\": \"Integrate Redux store with auth endpoints in frontend\",\n    \"status\": \"in-progress\",\n    \"deadline\": \"2026-07-20\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "Creates a new task for the authenticated user. Returns HTTP 201 Created."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Fail: Missing Title (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"\",\n    \"description\": \"Title is empty\",\n    \"status\": \"pending\",\n    \"deadline\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "Fails because the required 'title' field is empty. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task - Fail: Invalid Date Format (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Bad Deadline Task\",\n    \"description\": \"Invalid date check\",\n    \"status\": \"pending\",\n    \"deadline\": \"not-a-valid-date\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "Fails because the 'deadline' value is not a valid date format. Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task - Success (200)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Implement Redux State (Updated Title)\",\n    \"status\": \"done\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"1"
+							]
+						},
+						"description": "Updates fields of an existing task (e.g. status, title). Returns HTTP 200 OK."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task - Fail: Not Found / Unauthorized (404)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Non-existent task update\",\n    \"status\": \"done\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"999999"
+							]
+						},
+						"description": "Fails because the task ID does not exist or does not belong to the logged-in user. Returns HTTP 404 Not Found."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task - Fail: Invalid Status value (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"finished-invalid\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"1"
+							]
+						},
+						"description": "Fails because 'status' contains a value outside of ('pending', 'in-progress', 'done'). Returns HTTP 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task - Success (200)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"1"
+							]
+						},
+						"description": "Deletes the specified task ID. Returns HTTP 200 OK."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task - Fail: Not Found / Unauthorized (404)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"999999"
+							]
+						},
+						"description": "Fails because the task ID does not exist or does not belong to the logged-in user. Returns HTTP 404 Not Found."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. System (General)",
+			"item": [
+				{
+					"name": "Health check - Success (200)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Health check route to verify that the Express server is up and responsive. Returns HTTP 200 OK."
+					},
+					"response": []
+				},
+				{
+					"name": "Server - Trigger Error 500 (Internal)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks?status=invalid-db-state-trigger",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "invalid-db-state-trigger"
+								}
+							]
+						},
+						"description": "This request is intended to test error resilience (like sending bad values or causing DB issues). If the server hits uncaught errors in queries, it returns HTTP 500 Internal Server Error."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your-bearer-token-here",
+			"type": "string"
+		}
+	]
+}
