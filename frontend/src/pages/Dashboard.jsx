@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import TaskCard from '../components/TaskCard';
 import TaskFormModal from '../components/TaskFormModal';
@@ -13,24 +14,39 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Search and Filter States
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState(''); // '' for all, 'pending', 'in-progress', 'done'
+  // Search and Filter States synced with URL params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const statusFilter = searchParams.get('status') || '';
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
-  // Fetch tasks on search/filter changes
+  // Synchronize local search state with URL parameters (for browser back/forward navigation)
+  const urlSearch = searchParams.get('search') || '';
+  useEffect(() => {
+    setSearch(urlSearch);
+  }, [urlSearch]);
+
+  // Sync local search input to URL with debounce
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchTasks();
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (search) {
+          next.set('search', search);
+        } else {
+          next.delete('search');
+        }
+        return next;
+      }, { replace: true });
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [search, statusFilter]);
+  }, [search, setSearchParams]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -47,6 +63,24 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  }, [statusFilter, search]);
+
+  // Fetch tasks on URL search parameter changes
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  // Helper to update status filter via URL
+  const setStatusFilter = (newStatus) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (newStatus) {
+        next.set('status', newStatus);
+      } else {
+        next.delete('status');
+      }
+      return next;
+    }, { replace: true });
   };
 
   // Add Task
