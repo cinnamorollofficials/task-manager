@@ -4,20 +4,30 @@ Aplikasi Task Management System sederhana yang dibangun menggunakan **Express.js
 
 ---
 
-## Fitur Utama (MVP)
+## Fitur Utama (MVP & Nilai Plus)
 1. **Autentikasi Pengguna**:
-   - Register akun baru.
+   - Register akun baru dengan validasi regex email.
    - Login dengan pengembalian token JWT.
    - Logout (menghapus token di sisi client).
-   - Proteksi route (halaman utama hanya dapat diakses setelah login).
+   - Route Protection: Halaman utama hanya dapat diakses setelah login.
 2. **Manajemen Tugas (CRUD)**:
-   - Membuat tugas baru dengan *Title*, *Description*, *Status*, dan *Deadline*.
+   - Membuat tugas baru dengan *Title*, *Description*, *Status*, dan *Deadline* (dengan validasi format tanggal di backend).
    - Menampilkan daftar tugas milik masing-masing user.
    - Memperbarui tugas (edit judul, deskripsi, status, deadline).
    - Menghapus tugas dengan konfirmasi dialog.
 3. **Filter & Live Search**:
    - Menyaring tugas berdasarkan status (`Pending`, `In Progress`, `Selesai`).
-   - Pencarian tugas real-time (live search) berdasarkan judul.
+   - Pencarian tugas real-time (live search) berdasarkan judul dengan *debounce* 300ms.
+4. **Infinite Scroll (Nilai Plus)**:
+   - Memuat data secara otomatis (*fetch-on-scroll*) dengan batasan 6 data per halaman untuk performa optimal.
+5. **Indikator Tenggat Terlewat (Overdue Indicator - UX)**:
+   - Menyorot tenggat waktu dengan warna merah dan memberikan badge kedip **"Terlewat"** jika tugas belum selesai dan tanggal deadline sudah lewat dari hari ini.
+6. **Docker Support (Nilai Plus)**:
+   - Dijalankan dalam container Docker menggunakan Docker Compose.
+7. **Unit Testing (Nilai Plus)**:
+   - Pengujian terintegrasi menggunakan **Vitest** dan **Supertest** untuk memastikan keandalan rute API.
+8. **Dokumentasi API (Nilai Plus)**:
+   - Menyertakan berkas Postman Collection yang komprehensif.
 
 ---
 
@@ -31,13 +41,13 @@ Aplikasi Task Management System sederhana yang dibangun menggunakan **Express.js
 ## Panduan Instalasi & Jalankan Lokal
 
 ### 1. Prasyarat
-- Node.js (versi 16 atau lebih baru)
+- Node.js (versi 18 atau lebih baru)
 - MySQL Database
 
 ### 2. Setup Database
 1. Buka MySQL client Anda (PhpMyAdmin, Laragon, DBeaver, dll.).
 2. Buat database baru bernama `task_manager`.
-3. Import berkas `backend/schema.sql` untuk menginisialisasi tabel `users` dan `tasks`.
+3. Import berkas `backend/schema.sql` untuk menginisialisasi tabel `users` dan `tasks` (skema sudah teroptimasi dengan indeks komposit).
 
 ### 3. Setup Backend
 1. Buka terminal di folder `backend/`.
@@ -58,7 +68,14 @@ Aplikasi Task Management System sederhana yang dibangun menggunakan **Express.js
    ```bash
    npm install
    ```
-5. Jalankan server backend (development mode):
+5. **Populasi Database (Database Seeder)** (Sangat Direkomendasikan):
+   Jalankan perintah berikut untuk mengisi database dengan **2 akun default** yang masing-masing memiliki **50 data tugas acak**:
+   ```bash
+   npm run seed
+   ```
+   * **Akun John Doe**: `john@example.com` (password: `secretpassword`)
+   * **Akun Jane Doe**: `jane@example.com` (password: `secretpassword`)
+6. Jalankan server backend (development mode):
    ```bash
    npm run dev
    ```
@@ -66,15 +83,43 @@ Aplikasi Task Management System sederhana yang dibangun menggunakan **Express.js
 
 ### 4. Setup Frontend
 1. Buka terminal baru di folder `frontend/`.
-2. Install dependensi:
+2. Duplikat file `.env.example` menjadi `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+3. Install dependensi:
    ```bash
    npm install
    ```
-3. Jalankan aplikasi frontend:
+4. Jalankan aplikasi frontend:
    ```bash
    npm run dev
    ```
    *Aplikasi frontend akan berjalan di `http://localhost:5173` atau port yang tertera pada terminal.*
+
+---
+
+## Unit Testing (Uji Coba API)
+Anda dapat menjalankan rangkaian pengujian otomatis untuk menguji keandalan rute autentikasi dan kesehatan endpoint API:
+1. Buka terminal di folder `backend/`.
+2. Jalankan perintah berikut:
+   ```bash
+   npm run test
+   ```
+   *Pengujian menggunakan framework **Vitest** dan **Supertest**.*
+
+---
+
+## Dokumentasi API (Postman Collection)
+Untuk menguji endpoint API secara manual menggunakan Postman, silakan import berkas berikut yang berada di direktori utama proyek:
+* [postman_collection.json](postman_collection.json)
+
+Koleksi ini mencakup skenario pengujian lengkap untuk status kode:
+* **200 & 201**: Skenario sukses login, registrasi, pengambilan, pembaruan, dan penghapusan tugas.
+* **400 Bad Request**: Skenario kegagalan validasi form kosong, kesalahan format email, sandi terlalu pendek, atau format tanggal salah.
+* **401 Unauthorized**: Skenario pemanggilan rute terproteksi tanpa menyertakan JWT Bearer Token.
+* **404 Not Found**: Skenario manipulasi data ID tugas yang tidak ada atau milik user lain.
+* **500 Internal Error**: Skenario simulasi gangguan server.
 
 ---
 
@@ -90,65 +135,3 @@ Aplikasi ini sudah mendukung Docker Compose untuk inisialisasi instan tanpa perl
    - Membuat database MySQL dan mengimport `schema.sql`.
    - Menjalankan server backend Express di `http://localhost:5000`.
    - Menjalankan aplikasi frontend React di `http://localhost:3000`.
-
----
-
-## Dokumentasi RESTful API Endpoints
-
-### 1. Autentikasi (`/api/auth`)
-- **Register Akun Baru**:
-  - `POST /api/auth/register`
-  - Body (JSON):
-    ```json
-    {
-      "name": "John Doe",
-      "email": "john@example.com",
-      "password": "secretpassword"
-    }
-    ```
-- **Login**:
-  - `POST /api/auth/login`
-  - Body (JSON):
-    ```json
-    {
-      "email": "john@example.com",
-      "password": "secretpassword"
-    }
-    ```
-  - Response (JSON):
-    ```json
-    {
-      "message": "Login successful",
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john@example.com"
-      }
-    }
-    ```
-
-### 2. Manajemen Tugas (`/api/tasks`)
-*Seluruh endpoint di bawah wajib menyertakan Header: `Authorization: Bearer <token>`*
-
-- **Ambil Semua Tugas (Mendukung Search & Filter)**:
-  - `GET /api/tasks`
-  - Query Params (Opsional):
-    - `status`: `pending` | `in-progress` | `done`
-    - `search`: Kata kunci pencarian judul (misal: `laporan`)
-- **Buat Tugas Baru**:
-  - `POST /api/tasks`
-  - Body (JSON):
-    ```json
-    {
-      "title": "Belajar React M3",
-      "description": "Mempelajari integrasi Material Design 3 di Tailwind",
-      "status": "in-progress",
-      "deadline": "2026-06-30"
-    }
-    ```
-- **Update Tugas**:
-  - `PUT /api/tasks/:id`
-  - Body (JSON): Mengirimkan field yang ingin diupdate saja (parsial).
-- **Hapus Tugas**:
-  - `DELETE /api/tasks/:id`
