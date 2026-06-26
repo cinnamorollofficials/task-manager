@@ -118,3 +118,24 @@ export const updateTask = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const deleteTask = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    const [result] = await pool.query(
+      'DELETE FROM tasks WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Task not found or unauthorized' });
+    }
+
+    return res.status(200).json({ message: 'Task deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
