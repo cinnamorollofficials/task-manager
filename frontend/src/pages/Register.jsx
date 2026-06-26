@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { User, Mail, Lock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
   const { registerUser } = useContext(AuthContext);
@@ -10,6 +10,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -118,12 +119,20 @@ const Register = () => {
                   <Lock size={18} />
                 </span>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-m3-surfaceVariant/30 text-m3-onSurface rounded-3xl border border-m3-outline/20 focus:border-m3-primary focus:outline-none focus:ring-1 focus:ring-m3-primary transition-all duration-300"
+                  className="w-full pl-11 pr-12 py-3 bg-m3-surfaceVariant/30 text-m3-onSurface rounded-3xl border border-m3-outline/20 focus:border-m3-primary focus:outline-none focus:ring-1 focus:ring-m3-primary transition-all duration-300"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-m3-onSurfaceVariant hover:text-m3-primary transition-colors"
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
